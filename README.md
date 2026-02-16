@@ -1,0 +1,104 @@
+# RAG Internal Docs Assistant
+
+A retrieval-augmented generation (RAG) tool for querying internal documentation. Ask natural-language questions and get answers grounded in your company docs, with source citations.
+
+## Prerequisites
+
+- Python 3.10+
+- Node.js 18+
+- An [OpenAI API key](https://platform.openai.com/api-keys)
+
+## Project Structure
+
+```
+├── backend/          # FastAPI server and RAG pipeline
+│   ├── app/
+│   │   ├── main.py       # API endpoints
+│   │   └── ingest.py     # Document ingestion pipeline
+│   ├── docs/             # Markdown documentation files (knowledge base)
+│   ├── chroma_db/        # Vector database (created after ingestion)
+│   └── requirements.txt
+└── frontend/         # React + TypeScript UI
+    ├── src/
+    │   ├── App.tsx
+    │   └── main.tsx
+    └── package.json
+```
+
+## Setup
+
+### 1. Backend
+
+```bash
+cd backend
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+Create a `.env` file in the `backend/` directory:
+
+```
+OPENAI_API_KEY=your-api-key-here
+```
+
+### 2. Ingest documents
+
+Run the ingestion script to chunk the markdown files in `backend/docs/` and store their embeddings in ChromaDB:
+
+```bash
+cd backend
+python -m app.ingest
+```
+
+This only needs to be run once, or again when the documents in `backend/docs/` change.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+## Running the Application
+
+Start both the backend and frontend:
+
+```bash
+# Terminal 1 — Backend (from the repo root)
+source backend/.venv/bin/activate
+uvicorn backend.app.main:app --reload
+```
+
+```bash
+# Terminal 2 — Frontend
+cd frontend
+npm run dev
+```
+
+- Backend API: http://localhost:8000
+- Frontend UI: http://localhost:5173
+- API docs (Swagger): http://localhost:8000/docs
+
+Open http://localhost:5173 in your browser and start asking questions about your docs.
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/query` | Ask a question (retrieval + generation) |
+| POST | `/retrieve` | Raw semantic search over document chunks |
+| POST | `/debug-query` | Diagnostic view of retrieval results |
+| GET | `/source-docs` | List all ingested documentation files |
+| GET | `/source-docs/{filename}` | View a rendered source document |
+
+## How It Works
+
+1. **Ingestion** — Markdown files are split into chunks by heading boundaries and stored as embeddings (OpenAI `text-embedding-3-small`) in a local ChromaDB vector database.
+2. **Retrieval** — When a query comes in, it's embedded and matched against stored chunks using semantic similarity search.
+3. **Generation** — The top matching chunks are passed as context to OpenAI `gpt-4o-mini`, which generates an answer grounded in the retrieved content.
