@@ -8,9 +8,10 @@ load_dotenv(ENV_FILE)
 
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+import markdown
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -202,4 +203,39 @@ def debug_query(req: RetrieveRequest):
     return DebugQueryResponse(query=req.query, results=debug_results)
 
 
-app.mount("/source-docs", StaticFiles(directory=str(DOCS_DIR)), name="source_docs")
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }}
+  h1, h2, h3, h4 {{ margin-top: 1.5em; margin-bottom: 0.5em; }}
+  h1 {{ font-size: 1.8rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; }}
+  h2 {{ font-size: 1.4rem; }}
+  code {{ background: #f3f4f6; padding: 0.15em 0.35em; border-radius: 4px; font-size: 0.9em; }}
+  pre {{ background: #f3f4f6; padding: 1em; border-radius: 8px; overflow-x: auto; }}
+  pre code {{ background: none; padding: 0; }}
+  ul, ol {{ padding-left: 1.5em; }}
+  li {{ margin: 0.25em 0; }}
+  a {{ color: #2563eb; }}
+</style>
+</head>
+<body>{body}</body>
+</html>"""
+
+
+@app.get("/source-docs/{filename}")
+def source_doc(filename: str):
+    # Restrict to .md files inside DOCS_DIR
+    if not filename.endswith(".md"):
+        raise HTTPException(status_code=404, detail="Not found")
+    path = (DOCS_DIR / filename).resolve()
+    if not path.is_relative_to(DOCS_DIR.resolve()) or not path.is_file():
+        raise HTTPException(status_code=404, detail="Not found")
+
+    md_text = path.read_text(encoding="utf-8")
+    body = markdown.markdown(md_text, extensions=["fenced_code", "tables"])
+    title = filename.removesuffix(".md").replace("-", " ").title()
+    return HTMLResponse(HTML_TEMPLATE.format(title=title, body=body))
