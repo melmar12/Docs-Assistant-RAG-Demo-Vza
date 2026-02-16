@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface ChunkResult {
   doc_id: string;
@@ -91,9 +92,9 @@ function App() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Answer
             </h2>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {answer}
-            </p>
+            <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-gray-800 prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-100 prose-pre:rounded-lg">
+              <ReactMarkdown>{answer}</ReactMarkdown>
+            </div>
           </div>
         )}
 
