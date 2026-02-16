@@ -101,7 +101,13 @@ function App() {
               Answer
             </h2>
             <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-gray-800 prose-code:before:content-none prose-code:after:content-none prose-pre:bg-gray-100 prose-pre:rounded-lg">
-              <ReactMarkdown>{answer}</ReactMarkdown>
+              <ReactMarkdown>
+                {answer.replace(
+                  /\(Source:\s*([^)]+\.md)\)/g,
+                  (_match, filename) =>
+                    `(Source: [${filename}](http://localhost:8000/source-docs/${filename}))`
+                )}
+              </ReactMarkdown>
             </div>
           </div>
         )}
