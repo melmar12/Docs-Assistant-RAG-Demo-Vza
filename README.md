@@ -33,7 +33,7 @@ A retrieval-augmented generation (RAG) tool for querying internal documentation.
 cd backend
 
 # Create and activate a virtual environment
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
@@ -42,8 +42,8 @@ pip install -r requirements.txt
 
 Create a `.env` file in the `backend/` directory:
 
-```
-OPENAI_API_KEY=your-api-key-here
+```bash
+echo "OPENAI_API_KEY=your-api-key-here" > .env
 ```
 
 ### 2. Ingest documents
@@ -52,7 +52,7 @@ Run the ingestion script to chunk the markdown files in `backend/docs/` and stor
 
 ```bash
 cd backend
-python -m app.ingest
+python3 -m app.ingest
 ```
 
 This only needs to be run once, or again when the documents in `backend/docs/` change.
