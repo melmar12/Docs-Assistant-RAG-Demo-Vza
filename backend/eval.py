@@ -7,14 +7,14 @@ TOP_K = 5
 
 # (question, expected filename prefix in doc_id)
 CASES = [
-    ("How do I expense lunch?", "expense_policy.md"),
-    ("What is the receipt requirement?", "expense_policy.md"),
-    ("Are first-class flights reimbursable?", "expense_policy.md"),
-    ("How long do I have to submit an expense?", "expense_policy.md"),
+    ("What should I focus on in my first week?", "first-week-playbook.md"),
+    ("How do I open a pull request?", "pull-request-checklist.md"),
     ("How do I set up my development environment?", "onboarding.md"),
-    ("What is the code review process?", "onboarding.md"),
-    ("When do production deploys happen?", "onboarding.md"),
-    ("What tools do I need access to on day one?", "onboarding.md"),
+    ("How do I add authentication to an endpoint?", "authentication-and-authorization.md"),
+    ("How do I handle errors in my service?", "error-handling-and-logging.md"),
+    ("How do I write tests for a backend API?", "testing-backend-apis.md"),
+    ("What does the overall system architecture look like?", "system-architecture-overview.md"),
+    ("How do I add a new API endpoint?", "adding-a-new-api-endpoint.md"),
 ]
 
 
