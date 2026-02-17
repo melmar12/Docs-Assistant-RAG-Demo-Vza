@@ -97,6 +97,17 @@ Open http://localhost:5173 in your browser and start asking questions about your
 | GET | `/source-docs` | List all ingested documentation files |
 | GET | `/source-docs/{filename}` | View a rendered source document |
 
+## Running the Evaluation
+
+With the backend running, execute the retrieval evaluation script:
+
+```bash
+source backend/.venv/bin/activate
+python backend/eval.py
+```
+
+This runs test questions against the `/retrieve` endpoint and prints a Precision@5 results table.
+
 ## How It Works
 
 1. **Ingestion** — Markdown files are split into chunks by heading boundaries and stored as embeddings (OpenAI `text-embedding-3-small`) in a local ChromaDB vector database.

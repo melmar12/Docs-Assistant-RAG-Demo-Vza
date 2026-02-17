@@ -60,7 +60,7 @@ The React + TypeScript UI has a query textarea, a Markdown-rendered answer panel
 
 ### Retrieval Evaluation (Precision@5)
 
-8 test questions were run across two document categories — expense policy and onboarding — checking whether the expected source document appears in the top-5 retrieved chunks. **Precision@5** measures what fraction of queries pull the right document within the top 5.
+8 test questions were run across different documents in the knowledge base, checking whether the expected source document appears in the top-5 retrieved chunks. **Precision@5** measures what fraction of queries pull the right document within the top 5.
 
 **Script:** `backend/eval.py` | **Endpoint:** `POST /retrieve` with `top_k=5`
 
