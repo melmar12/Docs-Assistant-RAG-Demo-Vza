@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: rag-docs-backend
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt && python -m backend.app.ingest
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: rag-docs-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
