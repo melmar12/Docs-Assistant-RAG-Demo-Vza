@@ -1,3 +1,9 @@
+/**
+ * Collapsible panel showing the raw retrieved chunks from the
+ * vector database, including doc IDs, similarity scores, and
+ * chunk text. Useful for transparency into the RAG pipeline.
+ */
+
 interface ChunkResult {
   doc_id: string;
   score: number;
@@ -9,7 +15,6 @@ interface ChunksPanelProps {
   open: boolean;
   onToggle: () => void;
 }
-
 export default function ChunksPanel({ chunks, open, onToggle }: ChunksPanelProps) {
   if (chunks.length === 0) return null;
 

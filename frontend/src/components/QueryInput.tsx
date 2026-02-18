@@ -1,3 +1,9 @@
+/**
+ * Text input area for submitting questions to the RAG backend.
+ * Supports Enter to submit, Shift+Enter for newlines, and an
+ * optional "Start Over" button to reset the conversation.
+ */
+
 interface QueryInputProps {
   query: string;
   onQueryChange: (query: string) => void;
@@ -6,7 +12,6 @@ interface QueryInputProps {
   loading: boolean;
   showReset?: boolean;
 }
-
 export default function QueryInput({ query, onQueryChange, onSubmit, onReset, loading, showReset }: QueryInputProps) {
   return (
     <div className="space-y-3">

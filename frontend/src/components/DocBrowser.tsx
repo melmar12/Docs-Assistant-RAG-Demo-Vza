@@ -1,3 +1,9 @@
+/**
+ * Full-page documentation browser with a sidebar listing all
+ * available docs and a content pane that renders the selected
+ * document as Markdown. Strips YAML frontmatter before display.
+ */
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getMarkdownComponents } from "../markdownConfig";
@@ -10,7 +16,6 @@ interface DocBrowserProps {
   darkMode: boolean;
   onSelectDoc: (filename: string) => void;
 }
-
 export default function DocBrowser({ docList, selectedDoc, docContent, darkMode, onSelectDoc }: DocBrowserProps) {
   const markdownComponents = getMarkdownComponents(darkMode);
 

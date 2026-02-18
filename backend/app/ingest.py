@@ -32,7 +32,10 @@ MAX_CHUNK_CHARS = 1500
 
 
 def load_markdown_files(docs_dir: Path) -> list[dict]:
-    """Load all .md files from the docs directory."""
+    """Load all .md files from the given directory.
+
+    Returns a list of dicts with keys: ``filename``, ``relative_path``, ``content``.
+    """
     documents = []
     for md_file in sorted(docs_dir.glob("**/*.md")):
         text = md_file.read_text(encoding="utf-8")
@@ -150,7 +153,11 @@ def chunk_markdown(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[dict]:
 
 
 def ingest():
-    """Main ingestion pipeline."""
+    """Main ingestion pipeline.
+
+    Loads markdown files from ``docs/``, chunks them by heading boundaries,
+    embeds via OpenAI, and upserts into a ChromaDB collection.
+    """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     if not DOCS_DIR.exists():

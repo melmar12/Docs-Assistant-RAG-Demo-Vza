@@ -1,3 +1,9 @@
+/**
+ * Root application component. Manages all top-level state: query/answer
+ * lifecycle, dark mode, navigation between the assistant and doc browser
+ * views, and session persistence via sessionStorage.
+ */
+
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import QueryInput from "./components/QueryInput";

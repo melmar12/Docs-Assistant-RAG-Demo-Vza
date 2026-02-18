@@ -1,3 +1,11 @@
+"""FastAPI server for the RAG docs assistant.
+
+Exposes endpoints for semantic retrieval (/retrieve), retrieval + LLM
+generation (/query), retrieval diagnostics (/debug-query), and a doc
+browser API (/api/docs). Uses ChromaDB for vector search and OpenAI
+for embeddings and completions.
+"""
+
 import os
 from pathlib import Path
 
@@ -78,12 +86,14 @@ class RetrieveResponse(BaseModel):
 
 @app.get("/health")
 def health():
+    """Simple liveness check — returns ``{"status": "ok"}``."""
     return {"status": "ok"}
 
 
 @app.post("/retrieve", response_model=RetrieveResponse)
 @limiter.limit("30/minute")
 def retrieve(req: RetrieveRequest, request: Request):
+    """Return the top-k most similar chunks for a query (retrieval only, no LLM)."""
     if collection.count() == 0:
         raise HTTPException(status_code=503, detail="No documents ingested yet. Run: python -m app.ingest")
 
@@ -131,6 +141,7 @@ class QueryResponse(BaseModel):
 @app.post("/query", response_model=QueryResponse)
 @limiter.limit("10/minute")
 def query(req: QueryRequest, request: Request):
+    """Retrieve relevant chunks and generate an LLM answer grounded in them."""
     if collection.count() == 0:
         raise HTTPException(status_code=503, detail="No documents ingested yet. Run: python -m app.ingest")
 

@@ -1,3 +1,9 @@
+/**
+ * Top-level app header with the title, a navigation link that
+ * toggles between "Browse Docs" and "Back to Assistant", and a
+ * dark/light mode toggle button.
+ */
+
 function SunIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,7 +34,6 @@ interface HeaderProps {
   navLabel: string;
   onNavigate: () => void;
 }
-
 export default function Header({ darkMode, onThemeToggle, navLabel, onNavigate }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200 dark:bg-vsc-surface dark:border-vsc-border px-6 py-4 flex items-center justify-between">

@@ -1,3 +1,9 @@
+/**
+ * Welcome card shown on the home page before the user submits a query.
+ * Sets the scene ("you're a new engineer") and provides clickable
+ * suggestion chips so users know what kinds of questions to ask.
+ */
+
 const SUGGESTIONS = [
   "What should I do during my first week?",
   "How is the codebase structured?",
@@ -9,7 +15,6 @@ const SUGGESTIONS = [
 interface WelcomeCardProps {
   onSuggestionClick: (query: string) => void;
 }
-
 export default function WelcomeCard({ onSuggestionClick }: WelcomeCardProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-vsc-surface dark:bg-vsc-surface">

@@ -1,3 +1,10 @@
+/**
+ * Displays the submitted question and the AI-generated answer.
+ * Renders the answer as Markdown with syntax highlighting and
+ * converts `(Source: file.md)` references into clickable links
+ * that navigate to the doc browser.
+ */
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getMarkdownComponents } from "../markdownConfig";
@@ -9,7 +16,6 @@ interface AnswerCardProps {
   darkMode: boolean;
   onNavigateToDoc: (filename: string) => void;
 }
-
 export default function AnswerCard({ submittedQuery, answer, error, darkMode, onNavigateToDoc }: AnswerCardProps) {
   const markdownComponents = getMarkdownComponents(darkMode);
 

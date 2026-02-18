@@ -1,10 +1,15 @@
+/**
+ * Collapsible panel listing the source documents used to generate
+ * the answer. Each source is a clickable link that opens the
+ * document in the doc browser.
+ */
+
 interface SourcesPanelProps {
   sources: string[];
   open: boolean;
   onToggle: () => void;
   onSelectSource: (source: string) => void;
 }
-
 export default function SourcesPanel({ sources, open, onToggle, onSelectSource }: SourcesPanelProps) {
   if (sources.length === 0) return null;
 
