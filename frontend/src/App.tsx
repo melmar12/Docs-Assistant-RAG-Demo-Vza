@@ -5,6 +5,7 @@ import AnswerCard from "./components/AnswerCard";
 import SourcesPanel from "./components/SourcesPanel";
 import ChunksPanel from "./components/ChunksPanel";
 import DocBrowser from "./components/DocBrowser";
+import WelcomeCard from "./components/WelcomeCard";
 
 interface ChunkResult {
   doc_id: string;
@@ -166,8 +167,23 @@ function App() {
               query={query}
               onQueryChange={setQuery}
               onSubmit={handleAsk}
+              onReset={() => {
+                setQuery("");
+                setSubmittedQuery(null);
+                setAnswer(null);
+                setSources([]);
+                setSourcesOpen(false);
+                setChunks([]);
+                setChunksOpen(false);
+                setError(null);
+              }}
               loading={loading}
+              showReset={submittedQuery !== null}
             />
+
+            {!submittedQuery && !loading && (
+              <WelcomeCard onSuggestionClick={setQuery} />
+            )}
 
             <AnswerCard
               submittedQuery={submittedQuery}
