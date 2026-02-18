@@ -240,6 +240,58 @@ describe("App", () => {
     });
   });
 
+  describe("Welcome card and Start Over", () => {
+    it("shows welcome card with scenario text on initial load", () => {
+      render(<App />);
+      expect(screen.getByText(/You're a new engineer/)).toBeInTheDocument();
+    });
+
+    it("shows suggestion chips that fill the query input", async () => {
+      render(<App />);
+      const chip = screen.getByText("What should I do during my first week?");
+
+      await userEvent.click(chip);
+
+      const textarea = screen.getByPlaceholderText("Ask a question about internal docs...");
+      expect(textarea).toHaveValue("What should I do during my first week?");
+    });
+
+    it("hides welcome card after a query is submitted", async () => {
+      render(<App />);
+      const textarea = screen.getByPlaceholderText("Ask a question about internal docs...");
+
+      await userEvent.type(textarea, "test");
+      await userEvent.click(screen.getByText("Ask"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Answer")).toBeInTheDocument();
+      });
+      expect(screen.queryByText(/You're a new engineer/)).not.toBeInTheDocument();
+    });
+
+    it("does not show Start Over button before a query", () => {
+      render(<App />);
+      expect(screen.queryByText("Start Over")).not.toBeInTheDocument();
+    });
+
+    it("shows Start Over button after a query and resets to welcome card", async () => {
+      render(<App />);
+      const textarea = screen.getByPlaceholderText("Ask a question about internal docs...");
+
+      await userEvent.type(textarea, "test");
+      await userEvent.click(screen.getByText("Ask"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Start Over")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByText("Start Over"));
+
+      expect(screen.getByText(/You're a new engineer/)).toBeInTheDocument();
+      expect(screen.queryByText("Start Over")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Utility functions", () => {
     it("formatDocTitle converts filename to title case", async () => {
       server.use(

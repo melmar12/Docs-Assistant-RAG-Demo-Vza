@@ -2,10 +2,12 @@ interface QueryInputProps {
   query: string;
   onQueryChange: (query: string) => void;
   onSubmit: () => void;
+  onReset?: () => void;
   loading: boolean;
+  showReset?: boolean;
 }
 
-export default function QueryInput({ query, onQueryChange, onSubmit, loading }: QueryInputProps) {
+export default function QueryInput({ query, onQueryChange, onSubmit, onReset, loading, showReset }: QueryInputProps) {
   return (
     <div className="space-y-3">
       <textarea
@@ -21,13 +23,23 @@ export default function QueryInput({ query, onQueryChange, onSubmit, loading }: 
           }
         }}
       />
-      <button
-        onClick={onSubmit}
-        disabled={loading || !query.trim()}
-        className="bg-purple-600 hover:bg-purple-700 dark:bg-vsc-accent-muted dark:hover:bg-vsc-accent dark:text-vsc-bg text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {loading ? "Asking..." : "Ask"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={onSubmit}
+          disabled={loading || !query.trim()}
+          className="bg-purple-600 hover:bg-purple-700 dark:bg-vsc-accent-muted dark:hover:bg-vsc-accent dark:text-vsc-bg text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? "Asking..." : "Ask"}
+        </button>
+        {showReset && (
+          <button
+            onClick={onReset}
+            className="border border-gray-300 dark:border-vsc-border text-gray-600 dark:text-vsc-text-muted hover:bg-gray-100 dark:hover:bg-vsc-surface px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Start Over
+          </button>
+        )}
+      </div>
     </div>
   );
 }
