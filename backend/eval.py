@@ -1,8 +1,10 @@
 """Retrieval evaluation: checks whether expected docs appear in top_k results."""
 
+import os
+
 import httpx
 
-API_BASE = "http://localhost:8000"
+API_BASE = os.environ.get("API_BASE", "http://localhost:8000")
 TOP_K = 5
 
 # (question, expected filename prefix in doc_id)

@@ -8,22 +8,38 @@ load_dotenv(ENV_FILE)
 
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 CHROMA_DIR = Path(__file__).resolve().parent.parent / "chroma_db"
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 COLLECTION_NAME = "internal_docs"
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
+COMPLETION_MODEL = os.environ.get("COMPLETION_MODEL", "gpt-4o-mini")
 
 app = FastAPI()
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+
+
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # Initialize Chroma client + collection once at startup
@@ -33,10 +49,10 @@ if not api_key:
 
 embedding_fn = OpenAIEmbeddingFunction(
     api_key=api_key,
-    model_name="text-embedding-3-small",
+    model_name=EMBEDDING_MODEL,
 )
 
-openai_client = OpenAI(api_key=api_key)
+openai_client = OpenAI(api_key=api_key, timeout=30.0)
 
 chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 collection = chroma_client.get_or_create_collection(
@@ -66,9 +82,10 @@ def health():
 
 
 @app.post("/retrieve", response_model=RetrieveResponse)
-def retrieve(req: RetrieveRequest):
+@limiter.limit("30/minute")
+def retrieve(req: RetrieveRequest, request: Request):
     if collection.count() == 0:
-        raise HTTPException(status_code=404, detail="No documents ingested yet. Run: python -m app.ingest")
+        raise HTTPException(status_code=503, detail="No documents ingested yet. Run: python -m app.ingest")
 
     results = collection.query(
         query_texts=[req.query],
@@ -112,9 +129,10 @@ class QueryResponse(BaseModel):
 
 
 @app.post("/query", response_model=QueryResponse)
-def query(req: QueryRequest):
+@limiter.limit("10/minute")
+def query(req: QueryRequest, request: Request):
     if collection.count() == 0:
-        raise HTTPException(status_code=404, detail="No documents ingested yet. Run: python -m app.ingest")
+        raise HTTPException(status_code=503, detail="No documents ingested yet. Run: python -m app.ingest")
 
     results = collection.query(
         query_texts=[req.query],
@@ -142,14 +160,17 @@ def query(req: QueryRequest):
 
     context = "\n\n---\n\n".join(context_parts)
 
-    completion = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0.1,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT.format(context=context)},
-            {"role": "user", "content": req.query},
-        ],
-    )
+    try:
+        completion = openai_client.chat.completions.create(
+            model=COMPLETION_MODEL,
+            temperature=0.1,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT.format(context=context)},
+                {"role": "user", "content": req.query},
+            ],
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"LLM request failed: {e}")
 
     return QueryResponse(
         answer=completion.choices[0].message.content,
@@ -175,7 +196,7 @@ class DebugQueryResponse(BaseModel):
 def debug_query(req: RetrieveRequest):
     """Return retrieval diagnostics: doc_id, section, chunk_id, score, first 200 chars."""
     if collection.count() == 0:
-        raise HTTPException(status_code=404, detail="No documents ingested yet. Run: python -m app.ingest")
+        raise HTTPException(status_code=503, detail="No documents ingested yet. Run: python -m app.ingest")
 
     results = collection.query(
         query_texts=[req.query],
@@ -217,5 +238,8 @@ def get_doc(filename: str):
     if not path.is_relative_to(DOCS_DIR.resolve()) or not path.is_file():
         raise HTTPException(status_code=404, detail="Not found")
 
-    md_text = path.read_text(encoding="utf-8")
+    try:
+        md_text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=500, detail=f"File encoding error: {filename}")
     return {"filename": filename, "content": md_text}

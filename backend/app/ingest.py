@@ -1,9 +1,12 @@
 """Ingestion script: loads markdown files, chunks them, embeds via OpenAI, stores in ChromaDB."""
 
+import logging
 import os
 import re
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 try:
     from dotenv import load_dotenv
@@ -24,6 +27,7 @@ except ImportError:
 DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 CHROMA_DIR = Path(__file__).resolve().parent.parent / "chroma_db"
 COLLECTION_NAME = "internal_docs"
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
 MAX_CHUNK_CHARS = 1500
 
 
@@ -96,14 +100,12 @@ def _split_section_by_paragraphs(
         para = para.strip()
         if not para:
             continue
-        candidate = current + para + "\n\n" if current != prefix else prefix + para + "\n\n"
-        if current == prefix:
-            # First paragraph — always add it
-            current = prefix + para + "\n\n"
-        elif len(current + para + "\n\n") <= max_chars:
-            current += para + "\n\n"
+        candidate = current + para + "\n\n"
+        if len(candidate) <= max_chars:
+            current = candidate
         else:
-            chunks.append(current.strip())
+            if current.strip() != prefix.strip():
+                chunks.append(current.strip())
             current = prefix + para + "\n\n"
 
     if current.strip() and current.strip() != prefix.strip():
@@ -149,16 +151,18 @@ def chunk_markdown(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[dict]:
 
 def ingest():
     """Main ingestion pipeline."""
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
     if not DOCS_DIR.exists():
-        print(f"Docs directory not found: {DOCS_DIR}")
+        logger.error("Docs directory not found: %s", DOCS_DIR)
         sys.exit(1)
 
     documents = load_markdown_files(DOCS_DIR)
     if not documents:
-        print("No markdown files found in", DOCS_DIR)
+        logger.error("No markdown files found in %s", DOCS_DIR)
         sys.exit(1)
 
-    print(f"Found {len(documents)} markdown file(s)")
+    logger.info("Found %d markdown file(s)", len(documents))
 
     # Prepare chunks with metadata
     all_ids: list[str] = []
@@ -167,7 +171,7 @@ def ingest():
 
     for doc in documents:
         chunks = chunk_markdown(doc["content"])
-        print(f"  {doc['relative_path']}: {len(chunks)} chunk(s)")
+        logger.info("  %s: %d chunk(s)", doc["relative_path"], len(chunks))
         for i, chunk in enumerate(chunks):
             all_ids.append(f"{doc['relative_path']}::chunk{i}")
             all_chunks.append(chunk["text"])
@@ -178,25 +182,25 @@ def ingest():
                 "section": chunk["section"],
             })
 
-    print(f"Total chunks: {len(all_chunks)}")
+    logger.info("Total chunks: %d", len(all_chunks))
 
     # Initialize ChromaDB with OpenAI embeddings
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("Error: OPENAI_API_KEY environment variable is not set")
+        logger.error("OPENAI_API_KEY environment variable is not set")
         sys.exit(1)
 
     embedding_fn = OpenAIEmbeddingFunction(
         api_key=api_key,
-        model_name="text-embedding-3-small",
+        model_name=EMBEDDING_MODEL,
     )
 
     client = chromadb.PersistentClient(path=str(CHROMA_DIR))
     # Delete existing collection to do a clean re-ingest
     try:
         client.delete_collection(COLLECTION_NAME)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Could not delete existing collection: %s", e)
 
     collection = client.get_or_create_collection(
         name=COLLECTION_NAME,
@@ -213,7 +217,7 @@ def ingest():
             metadatas=all_metadatas[i:end],
         )
 
-    print(f"Ingested {collection.count()} chunks into ChromaDB at {CHROMA_DIR}")
+    logger.info("Ingested %d chunks into ChromaDB at %s", collection.count(), CHROMA_DIR)
 
 
 if __name__ == "__main__":

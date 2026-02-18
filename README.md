@@ -12,19 +12,13 @@ A retrieval-augmented generation (RAG) tool for querying internal documentation.
 
 ```
 ├── backend/          # FastAPI server and RAG pipeline
-│   ├── app/
-│   │   ├── main.py       # API endpoints
-│   │   └── ingest.py     # Document ingestion pipeline
+│   ├── app/              # API endpoints (main.py) and ingestion (ingest.py)
 │   ├── docs/             # Markdown documentation files (knowledge base)
 │   ├── chroma_db/        # Vector database (created after ingestion)
-│   └── requirements.txt
-└── frontend/         # React + TypeScript UI
-    ├── src/
-    │   ├── App.tsx           # Main application component
-    │   ├── App.test.tsx      # Frontend tests (Vitest)
-    │   ├── index.css         # Theme tokens and global styles
-    │   └── main.tsx
-    └── package.json
+│   └── eval.py           # Retrieval evaluation script
+└── frontend/         # React + TypeScript UI (Vite + Vitest + MSW)
+    └── src/
+        └── components/   # UI components
 ```
 
 ## Setup
